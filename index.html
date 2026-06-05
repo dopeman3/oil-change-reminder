@@ -588,7 +588,7 @@ Note: You will need to press Enter in each tab to actually send.`)) {
 
             dueClients.forEach((client, index) => {
                 setTimeout(() => {
-                    const message = `Hi ${client.name}, Your Engine oil change is due on ${client.dueMileage.toLocaleString()} kms. Please visit us for Oil change. Thanks!`;
+                    const message = `السلام علیکم ${client.name}، آپ کی گاڑی کا انجن آئل ${client.dueMileage.toLocaleString()} کلومیٹر پر تبدیل ہونا ہے۔ براہ کرم جلال آٹوز آئل چینج تشریف لائیں۔ شکریہ!`;
                     const waLink = `https://wa.me/${client.phone}?text=${encodeURIComponent(message)}`;
 
                     window.open(waLink, '_blank');
@@ -665,7 +665,7 @@ Note: You will need to press Enter in each tab to actually send.`)) {
                 }
 
                 const reminderCount = client.reminderCount || 0;
-                const message = `Hi ${client.name}, Your Engine oil change is due on ${client.dueMileage.toLocaleString()} kms. Please visit us for Oil change. Thanks!`;
+                const message = `السلام علیکم ${client.name}، آپ کی گاڑی کا انجن آئل ${client.dueMileage.toLocaleString()} کلومیٹر پر تبدیل ہونا ہے۔ براہ کرم جلال آٹوز آئل چینج تشریف لائیں۔ شکریہ!`;
                 const waLink = `https://wa.me/${client.phone}?text=${encodeURIComponent(message)}`;
 
                 const sentKey = client.id + '_' + nextReminder.toDateString();
