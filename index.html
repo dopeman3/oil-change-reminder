@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oil Change Reminder System - Auto Send</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(37,99,235,0.2);
+        }
+        header h1 { font-size: 2rem; margin-bottom: 8px; }
+        header p { opacity: 0.9; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--primary);
+        }
+        .stat-card h3 { font-size: 2rem; color: var(--primary); }
+        .stat-card p { color: var(--text-light); font-size: 0.9rem; }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 6px;
+            color: var(--text-light);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover { background: #15803d; }
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            font-size: 1.1rem;
+            padding: 14px 28px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+        .btn-whatsapp:hover { background: #128c7e; transform: translateY(-2px); }
+        .btn-sm { padding: 6px 12px; font-size: 0.875rem; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        tr:hover { background: #f8fafc; }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-due { background: #fee2e2; color: var(--danger); }
+        .badge-upcoming { background: #fef3c7; color: var(--warning); }
+        .badge-ok { background: #dcfce7; color: var(--success); }
+        .badge-sent { background: #dbeafe; color: var(--primary); }
+        .whatsapp-btn {
+            background: #25d366;
+            color: white;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .whatsapp-btn:hover { background: #128c7e; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal h2 { margin-bottom: 20px; }
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .history-item {
+            padding: 12px;
+            border-left: 3px solid var(--primary);
+            background: #f8fafc;
+            margin-bottom: 8px;
+            border-radius: 0 8px 8px 0;
+        }
+        .history-item small {
+            color: var(--text-light);
+            display: block;
+            margin-top: 4px;
+        }
+        .search-box {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+        .search-box:focus { outline: none; border-color: var(--primary); }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        .empty-state svg { margin-bottom: 16px; opacity: 0.5; }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-light);
+            border-radius: 6px;
+        }
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        .tab:hover:not(.active) { background: var(--bg); }
+        .hidden { display: none !important; }
+        .bulk-panel {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .bulk-panel h3 { color: #166534; margin: 0; }
+        .bulk-panel p { color: #15803d; margin: 4px 0 0 0; font-size: 0.9rem; }
+        .send-progress {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            min-width: 300px;
+        }
+        .send-progress.active { display: block; }
+        .progress-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            table { font-size: 0.85rem; }
+            th, td { padding: 8px; }
+            .actions { flex-direction: column; }
+            .bulk-panel { flex-direction: column; text-align: center; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Jalal Autos Oil Change</h1>
+            <p>Client Management and Reminder System</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3 id="totalClients">0</h3>
+                <p>Total Clients</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="dueReminders">0</h3>
+                <p>Due for Reminder</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="sentToday">0</h3>
+                <p>Sent Today</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="visitedThisMonth">0</h3>
+                <p>Visited This Month</p>
+            </div>
+        </div>
+
+        <!-- Bulk Send Panel -->
+        <div class="bulk-panel" id="bulkPanel" style="display:none;">
+            <div>
+                <h3>📱 Bulk Send Ready</h3>
+                <p><strong id="dueCountDisplay">0</strong> clients are due for reminders today</p>
+            </div>
+            <button class="btn btn-whatsapp" onclick="sendAllDue()">
+                🚀 Send All Due Reminders
+            </button>
+        </div>
+
+        <!-- Add Client Form -->
+        <div class="card">
+            <h2>➕ Add New Client / Service Record</h2>
+            <form id="clientForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Client Name *</label>
+                        <input type="text" id="name" required placeholder="e.g. Ahmed Khan">
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp Number *</label>
+                        <input type="tel" id="phone" required placeholder="e.g. 923001234567">
+                    </div>
+                    <div class="form-group">
+                        <label>Oil Change Date *</label>
+                        <input type="date" id="oilDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Mileage (km) *</label>
+                        <input type="number" id="currentMileage" required placeholder="e.g. 80000">
+                    </div>
+                    <div class="form-group">
+                        <label>Due Mileage (km) *</label>
+                        <input type="number" id="dueMileage" required placeholder="e.g. 86000">
+                    </div>
+                    <div class="form-group">
+                        <label>Car Model (Optional)</label>
+                        <input type="text" id="carModel" placeholder="e.g. Toyota Corolla 2020">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    💾 Save Client Record
+                </button>
+            </form>
+        </div>
+
+        <!-- Clients List -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                <h2>📋 Clients & Reminders</h2>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search by name or phone..." style="width:250px; margin:0;">
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('active')">Active Clients</button>
+                <button class="tab" onclick="showTab('history')">Full History</button>
+            </div>
+
+            <div id="activeTab">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Car</th>
+                            <th>Last Service</th>
+                            <th>Due KM</th>
+                            <th>Next Reminder</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTable"></tbody>
+                </table>
+                <div id="emptyState" class="empty-state hidden">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <p>No clients yet. Add your first client above!</p>
+                </div>
+            </div>
+
+            <div id="historyTab" class="hidden">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Client</th>
+                            <th>Phone</th>
+                            <th>Service KM</th>
+                            <th>Due KM</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Progress Popup -->
+    <div class="send-progress" id="sendProgress">
+        <strong>📱 Opening WhatsApp tabs...</strong>
+        <p style="font-size:0.85rem; color:var(--text-light); margin-top:4px;">
+            Opened <span id="openedCount">0</span> of <span id="totalCount">0</span> messages
+        </p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p style="font-size:0.8rem; color:var(--text-light); margin-top:8px;">
+            Press Enter in each WhatsApp tab to send
+        </p>
+    </div>
+
+    <!-- Update Service Modal -->
+    <div class="modal-overlay" id="updateModal">
+        <div class="modal">
+            <h2>🔄 Update Service Record</h2>
+            <p style="color:var(--text-light); margin-bottom:20px;">Client visited for oil change? Update their record here. The old record will be saved in history.</p>
+            <form id="updateForm">
+                <input type="hidden" id="updateId">
+                <div class="form-grid" style="grid-template-columns:1fr;">
+                    <div class="form-group">
+                        <label>New Oil Change Date</label>
+                        <input type="date" id="newOilDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Current Mileage (km)</label>
+                        <input type="number" id="newCurrentMileage" required placeholder="e.g. 86000">
+                    </div>
+                    <div class="form-group">
+                        <label>New Due Mileage (km)</label>
+                        <input type="number" id="newDueMileage" required placeholder="e.g. 92000">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()" style="background:var(--border); color:var(--text);">Cancel</button>
+                    <button type="submit" class="btn btn-success">✅ Update & Archive Old</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <h2>📜 Service History</h2>
+            <div id="historyContent" class="history-list"></div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeHistoryModal()" style="background:var(--border); color:var(--text);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Store
+        let clients = JSON.parse(localStorage.getItem('oilClients')) || [];
+        let history = JSON.parse(localStorage.getItem('oilHistory')) || [];
+        let remindersSent = JSON.parse(localStorage.getItem('remindersSent')) || {};
+
+        // Initialize
+        document.getElementById('oilDate').valueAsDate = new Date();
+        renderClients();
+        updateStats();
+        checkBulkPanel();
+
+        // Form Submit
+        document.getElementById('clientForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const client = {
+                id: Date.now().toString(),
+                name: document.getElementById('name').value.trim(),
+                phone: document.getElementById('phone').value.trim().replace(/\D/g, ''),
+                oilDate: document.getElementById('oilDate').value,
+                currentMileage: parseInt(document.getElementById('currentMileage').value),
+                dueMileage: parseInt(document.getElementById('dueMileage').value),
+                carModel: document.getElementById('carModel').value.trim() || '-',
+                createdAt: new Date().toISOString(),
+                reminderCount: 0,
+                lastReminderDate: null
+            };
+
+            if (client.phone.length < 10) {
+                alert('Please enter a valid phone number with country code (e.g. 923001234567)');
+                return;
+            }
+
+            clients.push(client);
+            saveData();
+            renderClients();
+            updateStats();
+            checkBulkPanel();
+            this.reset();
+            document.getElementById('oilDate').valueAsDate = new Date();
+            alert('✅ Client added successfully!');
+        });
+
+        // Search
+        document.getElementById('searchBox').addEventListener('input', function() {
+            renderClients(this.value);
+        });
+
+        // Check and show bulk panel
+        function checkBulkPanel() {
+            const dueClients = getDueClients();
+            const panel = document.getElementById('bulkPanel');
+            const countDisplay = document.getElementById('dueCountDisplay');
+
+            if (dueClients.length > 0) {
+                panel.style.display = 'flex';
+                countDisplay.textContent = dueClients.length;
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function getDueClients() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            return clients.filter(c => {
+                const nextReminder = getNextReminderDate(c);
+                const sentKey = c.id + '_' + nextReminder.toDateString();
+                return nextReminder <= today && !remindersSent[sentKey];
+            });
+        }
+
+        // Send All Due
+        function sendAllDue() {
+            const dueClients = getDueClients();
+            if (dueClients.length === 0) {
+                alert('No due reminders right now!');
+                return;
+            }
+
+            if (!confirm(`Open WhatsApp for ${dueClients.length} clients? Make sure WhatsApp Web is logged in.
+
+Note: You will need to press Enter in each tab to actually send.`)) {
+                return;
+            }
+
+            const progress = document.getElementById('sendProgress');
+            const openedCount = document.getElementById('openedCount');
+            const totalCount = document.getElementById('totalCount');
+            const progressFill = document.getElementById('progressFill');
+
+            progress.classList.add('active');
+            totalCount.textContent = dueClients.length;
+            openedCount.textContent = '0';
+            progressFill.style.width = '0%';
+
+            let opened = 0;
+            const delay = 1500; // 1.5 seconds between each to avoid browser blocking
+
+            dueClients.forEach((client, index) => {
+                setTimeout(() => {
+                    const message = `Hi ${client.name}, Your Engine oil change is due on ${client.dueMileage.toLocaleString()} kms. Please visit us for Oil change. Thanks!`;
+                    const waLink = `https://wa.me/${client.phone}?text=${encodeURIComponent(message)}`;
+
+                    window.open(waLink, '_blank');
+
+                    // Mark as sent
+                    const nextReminder = getNextReminderDate(client);
+                    const key = client.id + '_' + nextReminder.toDateString();
+                    remindersSent[key] = {
+                        sentAt: new Date().toISOString(),
+                        dateStr: nextReminder.toDateString()
+                    };
+                    client.reminderCount = (client.reminderCount || 0) + 1;
+                    client.lastReminderDate = new Date().toISOString();
+
+                    opened++;
+                    openedCount.textContent = opened;
+                    progressFill.style.width = ((opened / dueClients.length) * 100) + '%';
+
+                    if (opened === dueClients.length) {
+                        setTimeout(() => {
+                            progress.classList.remove('active');
+                            saveData();
+                            renderClients();
+                            updateStats();
+                            checkBulkPanel();
+                            alert(`✅ Opened ${opened} WhatsApp tabs! Press Enter in each tab to send the message.`);
+                        }, 1000);
+                    }
+                }, index * delay);
+            });
+        }
+
+        // Render Clients
+        function renderClients(search = '') {
+            const tbody = document.getElementById('clientsTable');
+            const emptyState = document.getElementById('emptyState');
+
+            let filtered = clients;
+            if (search) {
+                const s = search.toLowerCase();
+                filtered = clients.filter(c => 
+                    c.name.toLowerCase().includes(s) || 
+                    c.phone.includes(s)
+                );
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            filtered.sort((a, b) => {
+                const aNext = getNextReminderDate(a);
+                const bNext = getNextReminderDate(b);
+                return aNext - bNext;
+            });
+
+            tbody.innerHTML = filtered.map(client => {
+                const nextReminder = getNextReminderDate(client);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const isDue = nextReminder <= today;
+                const daysUntil = Math.ceil((nextReminder - today) / (1000 * 60 * 60 * 24));
+
+                let statusBadge;
+                if (isDue) {
+                    statusBadge = `<span class="badge badge-due">🔴 Due Now</span>`;
+                } else if (daysUntil <= 3) {
+                    statusBadge = `<span class="badge badge-upcoming">🟡 In ${daysUntil}d</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-ok">🟢 OK</span>`;
+                }
+
+                const reminderCount = client.reminderCount || 0;
+                const message = `Hi ${client.name}, Your Engine oil change is due on ${client.dueMileage.toLocaleString()} kms. Please visit us for Oil change. Thanks!`;
+                const waLink = `https://wa.me/${client.phone}?text=${encodeURIComponent(message)}`;
+
+                const sentKey = client.id + '_' + nextReminder.toDateString();
+                const isSent = remindersSent[sentKey];
+
+                return `
+                    <tr>
+                        <td><strong>${client.name}</strong></td>
+                        <td>+${client.phone}</td>
+                        <td>${client.carModel}</td>
+                        <td>${formatDate(client.oilDate)}<br><small style="color:var(--text-light)">@ ${client.currentMileage.toLocaleString()} km</small></td>
+                        <td><strong>${client.dueMileage.toLocaleString()}</strong> km</td>
+                        <td>${formatDate(nextReminder)}<br><small style="color:var(--text-light)">Reminder #${reminderCount + 1}</small></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="${waLink}" target="_blank" class="whatsapp-btn" onclick="markSent('${client.id}', '${nextReminder.toDateString()}')">
+                                    📱 WhatsApp
+                                </a>
+                                ${isSent ? '<span class="badge badge-sent" style="margin-left:4px;">✓ Sent</span>' : ''}
+                                <button class="btn btn-sm btn-success" onclick="openUpdateModal('${client.id}')">🔄 Update</button>
+                                <button class="btn btn-sm" style="background:#f1f5f9;" onclick="viewHistory('${client.id}')">📜 History</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteClient('${client.id}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getNextReminderDate(client) {
+            const oilDate = new Date(client.oilDate);
+            const firstReminder = new Date(oilDate);
+            firstReminder.setMonth(firstReminder.getMonth() + 1);
+
+            const reminderCount = client.reminderCount || 0;
+
+            if (reminderCount === 0) {
+                return firstReminder;
+            } else {
+                const subsequentReminder = new Date(firstReminder);
+                subsequentReminder.setDate(subsequentReminder.getDate() + (reminderCount * 14));
+                return subsequentReminder;
+            }
+        }
+
+        function markSent(clientId, dateStr) {
+            const key = clientId + '_' + dateStr;
+            remindersSent[key] = {
+                sentAt: new Date().toISOString(),
+                dateStr: dateStr
+            };
+
+            const client = clients.find(c => c.id === clientId);
+            if (client) {
+                client.reminderCount = (client.reminderCount || 0) + 1;
+                client.lastReminderDate = new Date().toISOString();
+            }
+
+            saveData();
+            setTimeout(() => {
+                renderClients(document.getElementById('searchBox').value);
+                updateStats();
+                checkBulkPanel();
+            }, 500);
+        }
+
+        function openUpdateModal(id) {
+            const client = clients.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('updateId').value = id;
+            document.getElementById('newOilDate').valueAsDate = new Date();
+            document.getElementById('newCurrentMileage').value = client.dueMileage;
+            document.getElementById('newDueMileage').value = client.dueMileage + 6000;
+
+            document.getElementById('updateModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('updateModal').classList.remove('active');
+        }
+
+        document.getElementById('updateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('updateId').value;
+            const clientIndex = clients.findIndex(c => c.id === id);
+            if (clientIndex === -1) return;
+
+            const oldClient = clients[clientIndex];
+
+            const historyRecord = {
+                ...oldClient,
+                archivedAt: new Date().toISOString(),
+                finalStatus: 'Completed'
+            };
+            history.push(historyRecord);
+
+            clients[clientIndex] = {
+                ...oldClient,
+                oilDate: document.getElementById('newOilDate').value,
+                currentMileage: parseInt(document.getElementById('newCurrentMileage').value),
+                dueMileage: parseInt(document.getElementById('newDueMileage').value),
+                reminderCount: 0,
+                lastReminderDate: null,
+                updatedAt: new Date().toISOString()
+            };
+
+            saveData();
+            renderClients();
+            updateStats();
+            checkBulkPanel();
+            closeModal();
+            alert('✅ Service updated! Old record saved in history.');
+        });
+
+        function viewHistory(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            const clientHistory = history.filter(h => h.id === clientId || h.phone === client.phone);
+
+            const content = document.getElementById('historyContent');
+
+            if (clientHistory.length === 0) {
+                content.innerHTML = '<p style="text-align:center; color:var(--text-light);">No previous records found.</p>';
+            } else {
+                content.innerHTML = clientHistory.map(h => `
+                    <div class="history-item">
+                        <strong>Service Date:</strong> ${formatDate(h.oilDate)}<br>
+                        <strong>Mileage:</strong> ${h.currentMileage.toLocaleString()} km → Due: ${h.dueMileage.toLocaleString()} km<br>
+                        <strong>Car:</strong> ${h.carModel}<br>
+                        <small>Archived: ${formatDate(h.archivedAt)}</small>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('historyModal').classList.add('active');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.remove('active');
+        }
+
+        function deleteClient(id) {
+            if (!confirm('Are you sure you want to delete this client?')) return;
+
+            const client = clients.find(c => c.id === id);
+            if (client) {
+                history.push({
+                    ...client,
+                    archivedAt: new Date().toISOString(),
+                    finalStatus: 'Deleted'
+                });
+            }
+
+            clients = clients.filter(c => c.id !== id);
+            saveData();
+            renderClients();
+            updateStats();
+            checkBulkPanel();
+        }
+
+        function renderHistoryTab() {
+            const tbody = document.getElementById('historyTable');
+            const allRecords = [...history].sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt));
+
+            if (allRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-light); padding:40px;">No history records yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = allRecords.map(h => `
+                <tr>
+                    <td>${formatDate(h.archivedAt)}</td>
+                    <td><strong>${h.name}</strong></td>
+                    <td>+${h.phone}</td>
+                    <td>${h.currentMileage.toLocaleString()} km</td>
+                    <td>${h.dueMileage.toLocaleString()} km</td>
+                    <td><span class="badge ${h.finalStatus === 'Completed' ? 'badge-ok' : 'badge-due'}">${h.finalStatus}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (tab === 'active') {
+                document.getElementById('activeTab').classList.remove('hidden');
+                document.getElementById('historyTab').classList.add('hidden');
+            } else {
+                document.getElementById('activeTab').classList.add('hidden');
+                document.getElementById('historyTab').classList.remove('hidden');
+                renderHistoryTab();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalClients').textContent = clients.length;
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const dueCount = clients.filter(c => getNextReminderDate(c) <= today).length;
+            document.getElementById('dueReminders').textContent = dueCount;
+
+            const todayStr = today.toDateString();
+            const sentToday = Object.values(remindersSent).filter(r => new Date(r.sentAt).toDateString() === todayStr).length;
+            document.getElementById('sentToday').textContent = sentToday;
+
+            const thisMonth = clients.filter(c => {
+                const d = new Date(c.oilDate);
+                return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+            }).length;
+            document.getElementById('visitedThisMonth').textContent = thisMonth;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function saveData() {
+            localStorage.setItem('oilClients', JSON.stringify(clients));
+            localStorage.setItem('oilHistory', JSON.stringify(history));
+            localStorage.setItem('remindersSent', JSON.stringify(remindersSent));
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeHistoryModal();
+            }
+        });
+    </script>
+</body>
+</html>
